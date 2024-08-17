@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Friend Roulette</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="app">
+        <h1>Friend Roulette</h1>
+
+        <!-- Add Friend Section -->
+        <div>
+            <input type="text" id="friend-name" placeholder="Enter friend's name">
+            <button id="add-friend">Add Friend</button>
+        </div>
+
+        <!-- Grid Container -->
+        <div id="grid-container"></div>
+        
+        <!-- Spin Button -->
+        <button id="spin-button">Spin the Wheel</button>
+    </div>
+
+    <!-- Popup Modal -->
+    <div id="popup-modal">
+        <div id="popup-content">
+            <h2 id="popup-message">Confirm that you have contacted XYZ</h2>
+            <button id="confirm-button" disabled>Confirm Contact</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
