@@ -15,12 +15,12 @@ function createFriend(name, cadence) {
         cadence, // Set the desired cadence in days
     };
 }
-function getDaysSinceLastContact(friend) {
-    if (friend.lastContacted === null) {
-        return -1; // If never contacted, return 0 days
+function getDaysSinceLastContact(date) {
+    if (date === null) {
+        return -1; // If never contacted, return -1
     }
     const now = new Date();
-    const differenceInTime = now.getTime() - friend.lastContacted.getTime();
+    const differenceInTime = now.getTime() - date.getTime();
     const differenceInDays = Math.floor(differenceInTime / (1000 * 3600 * 24));
     return differenceInDays;
 }
@@ -35,10 +35,10 @@ document.addEventListener('DOMContentLoaded', function () {
         let appState = friendsData.appState;
         let selectedFriendName = appState.lastSelectedFriendName;
         let intervalId;
+        const container = document.getElementById('container');
         const gridContainer = document.getElementById('grid-container');
         const spinButton = document.getElementById('spin-button');
         const confirmButton = document.getElementById('confirm-button');
-        const popupModal = document.getElementById('popup-modal');
         const popupMessage = document.getElementById('popup-message');
         const cadenceSelector = document.getElementById('cadence-selector');
         const cadenceInput = document.getElementById('friend-cadence');
@@ -54,6 +54,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 // Update the hidden input with the selected cadence value
                 const selectedCadence = target.getAttribute('data-cadence');
                 if (selectedCadence) {
+                    console.log(`Cadence selected: ${selectedCadence}`);
                     cadenceInput.value = selectedCadence;
                 }
             }
@@ -61,9 +62,12 @@ document.addEventListener('DOMContentLoaded', function () {
         (_a = document.getElementById('add-friend')) === null || _a === void 0 ? void 0 : _a.addEventListener('click', function () {
             return __awaiter(this, void 0, void 0, function* () {
                 const friendNameInput = document.getElementById('friend-name');
+                console.log(`Added ${friendNameInput}`);
                 const cadenceInput = document.getElementById('friend-cadence');
+                console.log(`At a cadence ${cadenceInput}`);
                 const friendName = friendNameInput.value.trim();
                 const cadence = parseInt(cadenceInput.value.trim(), 10);
+                console.log("added friend data sucessfully parsed");
                 if (friendName && !isNaN(cadence)) {
                     yield addOrUpdateFriend(friendName, cadence);
                     renderFriendsGrid();
@@ -81,6 +85,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     appState.confirmationPending = false; // No longer pending
                     yield saveDataToBackend({ friends, appState });
                     spinButton.disabled = false; // Re-enable spin button
+                    spinButton.classList.remove('disabled'); // Remove disabled styling
                     hidePopup(); // Hide the popup after confirmation
                     friendsData = yield loadDataFromBackend(); // Refresh data from backend
                     friends = friendsData.friends;
@@ -144,7 +149,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     const nameElement = document.createElement('div');
                     nameElement.classList.add('friend-name'); // Add a specific class for the name element
                     nameElement.textContent = friend.name;
-                    const daysSinceLastContact = getDaysSinceLastContact(friend);
+                    const daysSinceLastContact = getDaysSinceLastContact(friend.lastContacted);
                     const daysElement = document.createElement('div');
                     daysElement.classList.add('days-since');
                     daysElement.textContent = (daysSinceLastContact === -1)
@@ -201,7 +206,8 @@ document.addEventListener('DOMContentLoaded', function () {
             const gridItems = document.querySelectorAll('.grid-item');
             gridItems.forEach(item => {
                 var _a;
-                const name = (_a = item.textContent) === null || _a === void 0 ? void 0 : _a.trim(); // Get the name from the grid item
+                const nameElement = item.querySelector('.friend-name');
+                const name = (_a = nameElement === null || nameElement === void 0 ? void 0 : nameElement.textContent) === null || _a === void 0 ? void 0 : _a.trim(); // Get the name from the grid item
                 if (name === selectedFriendName) {
                     item.classList.add('highlighted');
                 }
@@ -213,20 +219,24 @@ document.addEventListener('DOMContentLoaded', function () {
         // Show the popup modal
         function showPopup() {
             if (selectedFriendName !== "") {
-                popupMessage.textContent = `Confirm that you have contacted ${selectedFriendName}`;
+                popupMessage.innerHTML = `Confirm that you have contacted <span class="friend-name">${selectedFriendName}</span>`;
             }
+            container.classList.add('split'); // Trigger the split view layout
             setTimeout(() => {
-                popupModal.classList.add('show');
                 confirmButton.disabled = false;
             }, 500); // Delay of 0.5 seconds (500 milliseconds)
+            spinButton.classList.add('disabled'); // Apply disabled styling
         }
-        // Hide the popup modal
+        // Function to hide the popup and enable the spin button
         function hidePopup() {
-            popupModal.classList.remove('show');
+            container.classList.remove('split'); // Revert back to single panel layout
+            confirmButton.disabled = true;
         }
         // Load state and render grid on page load
         renderFriendsGrid();
-        if (appState.confirmationPending)
+        if (appState.confirmationPending) {
+            spinButton.classList.add('disabled'); // Apply disabled styling if confirmation is pending
             showPopup();
+        }
     });
 });
