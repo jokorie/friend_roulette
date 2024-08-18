@@ -1,20 +1,14 @@
 {
   "friends": [
     {
-      "name": "John Doe",
-      "lastContacted": "2024-08-18T04:13:43.989Z"
-    },
-    {
-      "name": "Jane Smith",
-      "lastContacted": "2024-08-18T04:14:20.981Z"
-    },
-    {
-      "name": "Momma",
-      "lastContacted": null
+      "name": "Johnny",
+      "lastContacted": "2024-08-18T05:35:47.760Z",
+      "cadence": 3
     }
   ],
   "appState": {
-    "lastSelectedIndex": 0,
-    "confirmationPending": true
+    "lastSelectedName": "",
+    "confirmationPending": false,
+    "lastSelectedFriendName": "Johnny"
   }
 }

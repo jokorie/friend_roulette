@@ -8,10 +8,11 @@ import cors from 'cors';
 interface Friend {
     name: string;
     lastContacted: Date | null;
+    cadence: number;
 }
 
 interface AppState {
-    lastSelectedIndex: number | undefined;
+    lastSelectedName: string;
     confirmationPending: boolean;
 }
 
@@ -24,7 +25,7 @@ function createFriendsData(): FriendsData {
     return {
         friends: [],
         appState: {
-            lastSelectedIndex: undefined,
+            lastSelectedName: "",
             confirmationPending: false,
         },
     };
@@ -44,12 +45,22 @@ const friendsFilePath = path.join(__dirname, 'friends.json');
 function readDataFromFile(): Promise<FriendsData> {
     return new Promise((resolve, reject) => {
         fs.readFile(friendsFilePath, 'utf8', (err, data) => {
+            console.log(err);
+            console.log(data);
             if (err) {
-                return reject('Failed to read data');
-            }
-
-            if (!data) {
-                resolve(createFriendsData()); // If file is empty, return default data
+                if (err.code === 'ENOENT') {
+                    // File does not exist, create it with default data
+                    const defaultData = createFriendsData();
+                    writeDataToFile(defaultData)
+                        .then(() => resolve(defaultData))
+                        .catch(reject);
+                } else {
+                    return reject('Failed to read data');
+                }
+            } else if (!data) {
+                // File is empty, resolve with default data
+                const defaultData = createFriendsData();
+                resolve(defaultData);
             } else {
                 try {
                     const parsedData = JSON.parse(data);

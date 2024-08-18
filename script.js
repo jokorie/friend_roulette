@@ -8,15 +8,23 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+function createFriend(name, cadence) {
+    return {
+        name,
+        lastContacted: null,
+        cadence, // Set the desired cadence in days
+    };
+}
 document.addEventListener('DOMContentLoaded', function () {
     return __awaiter(this, void 0, void 0, function* () {
         var _a;
+        console.log("start");
         let friendsData = yield loadDataFromBackend();
+        console.log("end");
         console.log(friendsData);
         let friends = friendsData.friends;
         let appState = friendsData.appState;
-        let selectedIndex = appState.lastSelectedIndex;
-        let currentHighlightIndex = 0;
+        let selectedFriendName = appState.lastSelectedFriendName;
         let intervalId;
         const gridContainer = document.getElementById('grid-container');
         const spinButton = document.getElementById('spin-button');
@@ -26,21 +34,23 @@ document.addEventListener('DOMContentLoaded', function () {
         (_a = document.getElementById('add-friend')) === null || _a === void 0 ? void 0 : _a.addEventListener('click', function () {
             return __awaiter(this, void 0, void 0, function* () {
                 const friendNameInput = document.getElementById('friend-name');
+                const cadenceInput = document.getElementById('friend-cadence');
                 const friendName = friendNameInput.value.trim();
-                if (friendName) {
-                    yield addOrUpdateFriend(friendName);
-                    friendsData = yield loadDataFromBackend(); // Refresh data from backend
-                    friends = friendsData.friends;
+                const cadence = parseInt(cadenceInput.value.trim(), 10);
+                if (friendName && !isNaN(cadence)) {
+                    yield addOrUpdateFriend(friendName, cadence);
                     renderFriendsGrid();
                     friendNameInput.value = '';
+                    cadenceInput.value = '';
                 }
             });
         });
         // Confirmation button event listener
         confirmButton.addEventListener('click', function () {
             return __awaiter(this, void 0, void 0, function* () {
-                if (selectedIndex !== undefined) {
-                    friends[selectedIndex].lastContacted = new Date(); // Update last contacted date
+                const selectedFriend = friends.find((friend) => friend.name === selectedFriendName);
+                if (selectedFriend !== undefined) {
+                    selectedFriend.lastContacted = new Date(); // Update last contacted date
                     appState.confirmationPending = false; // No longer pending
                     yield saveDataToBackend({ friends, appState });
                     spinButton.disabled = false; // Re-enable spin button
@@ -53,14 +63,15 @@ document.addEventListener('DOMContentLoaded', function () {
         });
         // Spin the wheel button event listener
         spinButton.addEventListener('click', spinWheel);
-        function addOrUpdateFriend(friendName) {
+        function addOrUpdateFriend(friendName, cadence) {
             return __awaiter(this, void 0, void 0, function* () {
                 const existingFriend = friends.find(friend => friend.name === friendName);
                 if (existingFriend) {
                     existingFriend.lastContacted = null;
+                    existingFriend.cadence = cadence;
                 }
                 else {
-                    const newFriend = { name: friendName, lastContacted: null };
+                    const newFriend = { name: friendName, lastContacted: null, cadence };
                     friends.push(newFriend);
                 }
                 yield saveDataToBackend({ friends, appState });
@@ -79,44 +90,68 @@ document.addEventListener('DOMContentLoaded', function () {
         }
         function loadDataFromBackend() {
             return __awaiter(this, void 0, void 0, function* () {
+                console.log("before response");
                 const response = yield fetch('http://localhost:3000/data');
+                console.log(response);
                 if (!response.ok) {
                     throw new Error('Failed to load data');
                 }
                 return yield response.json();
             });
         }
+        function shouldRenderFriend(friend) {
+            if (!friend.lastContacted) {
+                return true; // If never contacted, render the friend
+            }
+            const now = new Date();
+            const lastContactedDate = new Date(friend.lastContacted);
+            const daysSinceLastContact = Math.floor((now.getTime() - lastContactedDate.getTime()) / (1000 * 60 * 60 * 24));
+            return daysSinceLastContact >= friend.cadence;
+        }
         function renderFriendsGrid() {
             gridContainer.innerHTML = '';
             friends.forEach((friend, index) => {
-                const div = document.createElement('div');
-                div.classList.add('grid-item');
-                div.textContent = friend.name;
-                gridContainer.appendChild(div);
-                if (index === selectedIndex) {
-                    div.classList.add('highlighted');
+                if (shouldRenderFriend(friend)) {
+                    const div = document.createElement('div');
+                    div.classList.add('grid-item');
+                    div.textContent = friend.name;
+                    gridContainer.appendChild(div);
+                    if (friend.name === selectedFriendName) {
+                        div.classList.add('highlighted');
+                    }
                 }
             });
         }
         // Spin the wheel and stop at a random friend
         function spinWheel() {
-            if (intervalId || friends.length === 0) {
+            const gridItems = document.querySelectorAll('.grid-item');
+            if (intervalId || gridItems.length === 0) {
                 return;
             }
+            let currentHighlightIndex = 0;
             spinButton.disabled = true; // Disable spin button until confirmation
             let spinCount = 0;
             const maxSpins = Math.floor(Math.random() * 20) + 20;
-            const gridItems = document.querySelectorAll('.grid-item');
+            const namesSet = new Set();
+            gridItems.forEach(item => {
+                var _a;
+                const name = (_a = item.textContent) === null || _a === void 0 ? void 0 : _a.trim(); // Get the name from the grid item
+                if (name) {
+                    namesSet.add(name);
+                }
+            });
             intervalId = window.setInterval(() => {
-                selectedIndex = (currentHighlightIndex + 1) % gridItems.length;
-                currentHighlightIndex = selectedIndex; // Update currentHighlightIndex
+                currentHighlightIndex = (currentHighlightIndex + 1) % friends.length;
+                while (!namesSet.has(friends[currentHighlightIndex].name)) {
+                    currentHighlightIndex = (currentHighlightIndex + 1) % friends.length;
+                }
+                selectedFriendName = friends[currentHighlightIndex].name; // Update currentHighlightIndex
                 highlightSelected();
                 spinCount++;
                 if (spinCount >= maxSpins) {
                     clearInterval(intervalId);
                     intervalId = undefined;
-                    appState.confirmationPending = true;
-                    appState.lastSelectedIndex = selectedIndex;
+                    appState.lastSelectedFriendName = selectedFriendName;
                     appState.confirmationPending = true;
                     showPopup(); // Show the popup after spinning
                     saveDataToBackend({ friends, appState }); // Save the updated state
@@ -124,17 +159,22 @@ document.addEventListener('DOMContentLoaded', function () {
             }, 100);
         }
         function highlightSelected() {
-            if (selectedIndex === undefined) {
-                throw new Error("Selected index is undefined. Cannot highlight friend");
-            }
             const gridItems = document.querySelectorAll('.grid-item');
-            gridItems.forEach(item => item.classList.remove('highlighted'));
-            gridItems[selectedIndex].classList.add('highlighted');
+            gridItems.forEach(item => {
+                var _a;
+                const name = (_a = item.textContent) === null || _a === void 0 ? void 0 : _a.trim(); // Get the name from the grid item
+                if (name === selectedFriendName) {
+                    item.classList.add('highlighted');
+                }
+                else {
+                    item.classList.remove('highlighted');
+                }
+            });
         }
         // Show the popup modal
         function showPopup() {
-            if (selectedIndex !== undefined) {
-                popupMessage.textContent = `Confirm that you have contacted ${friends[selectedIndex].name}`;
+            if (selectedFriendName !== "") {
+                popupMessage.textContent = `Confirm that you have contacted ${selectedFriendName}`;
             }
             setTimeout(() => {
                 popupModal.classList.add('show');

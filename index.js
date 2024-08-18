@@ -17,7 +17,7 @@ function createFriendsData() {
     return {
         friends: [],
         appState: {
-            lastSelectedIndex: undefined,
+            lastSelectedName: "",
             confirmationPending: false,
         },
     };
@@ -33,11 +33,24 @@ const friendsFilePath = path.join(__dirname, 'friends.json');
 function readDataFromFile() {
     return new Promise((resolve, reject) => {
         fs.readFile(friendsFilePath, 'utf8', (err, data) => {
+            console.log(err);
+            console.log(data);
             if (err) {
-                return reject('Failed to read data');
+                if (err.code === 'ENOENT') {
+                    // File does not exist, create it with default data
+                    const defaultData = createFriendsData();
+                    writeDataToFile(defaultData)
+                        .then(() => resolve(defaultData))
+                        .catch(reject);
+                }
+                else {
+                    return reject('Failed to read data');
+                }
             }
-            if (!data) {
-                resolve(createFriendsData()); // If file is empty, return default data
+            else if (!data) {
+                // File is empty, resolve with default data
+                const defaultData = createFriendsData();
+                resolve(defaultData);
             }
             else {
                 try {
