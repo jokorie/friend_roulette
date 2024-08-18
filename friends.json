@@ -1,114 +1,48 @@
 {
   "friends": [
     {
-      "name": "hv",
-      "lastContacted": "2024-08-18T05:43:31.922Z",
+      "name": "johnny",
+      "lastContacted": "2024-08-18T16:08:35.087Z",
+      "cadence": 28
+    },
+    {
+      "name": "jacob",
+      "lastContacted": "2024-08-18T16:10:26.822Z",
       "cadence": 7
     },
     {
-      "name": "Mo",
-      "lastContacted": "2024-08-18T06:06:43.402Z",
-      "cadence": 28
-    },
-    {
-      "name": "hugfk",
-      "lastContacted": "2024-08-18T06:04:21.646Z",
-      "cadence": 28
-    },
-    {
-      "name": "azdfhb",
-      "lastContacted": "2024-08-18T14:14:48.730Z",
+      "name": "jonas",
+      "lastContacted": "2024-08-18T16:08:10.657Z",
       "cadence": 14
     },
     {
-      "name": "hrtshm",
-      "lastContacted": "2024-08-18T14:16:28.179Z",
+      "name": "qy5egr",
+      "lastContacted": "2024-08-18T16:14:51.553Z",
       "cadence": 14
     },
     {
-      "name": "htshrae",
-      "lastContacted": "2024-08-18T14:58:29.493Z",
+      "name": "HQREFD",
+      "lastContacted": "2024-08-18T16:10:49.050Z",
       "cadence": 7
     },
     {
-      "name": "AVDS",
-      "lastContacted": "2024-08-18T14:29:05.498Z",
-      "cadence": 14
-    },
-    {
-      "name": "qhgrbeafdcx",
-      "lastContacted": "2024-08-18T14:22:03.571Z",
-      "cadence": 28
-    },
-    {
-      "name": "herfd",
-      "lastContacted": "2024-08-18T14:30:22.702Z",
-      "cadence": 28
-    },
-    {
-      "name": "aqhrdf",
-      "lastContacted": "2024-08-18T14:49:04.854Z",
+      "name": "eqyhra",
+      "lastContacted": "2024-08-18T16:29:19.602Z",
       "cadence": 7
     },
     {
-      "name": "qhb35renjb",
-      "lastContacted": "2024-08-18T14:21:52.323Z",
-      "cadence": 14
-    },
-    {
-      "name": "qhj4tebafd",
-      "lastContacted": "2024-08-18T14:30:48.799Z",
-      "cadence": 14
-    },
-    {
-      "name": "jlh,",
-      "lastContacted": "2024-08-18T15:03:13.394Z",
-      "cadence": 14
-    },
-    {
-      "name": "QGEFavds",
-      "lastContacted": "2024-08-18T15:16:28.417Z",
-      "cadence": 14
-    },
-    {
-      "name": "gWVds",
+      "name": "a",
       "lastContacted": null,
       "cadence": 7
     },
     {
-      "name": "G4WRVBSDF",
-      "lastContacted": "2024-08-18T15:19:56.301Z",
-      "cadence": 14
-    },
-    {
-      "name": "44GVwersd",
-      "lastContacted": "2024-08-18T15:19:21.421Z",
+      "name": "gWRSDV",
+      "lastContacted": "2024-08-18T16:29:11.734Z",
       "cadence": 28
-    },
-    {
-      "name": "3g42qeVDA",
-      "lastContacted": null,
-      "cadence": 7
-    },
-    {
-      "name": "hqrtebfad",
-      "lastContacted": null,
-      "cadence": 7
-    },
-    {
-      "name": "gqrewavdscx",
-      "lastContacted": null,
-      "cadence": 28
-    },
-    {
-      "name": "davB",
-      "lastContacted": null,
-      "cadence": 7
     }
   ],
   "appState": {
-    "lastSelectedIndex": 0,
-    "confirmationPending": true,
-    "lastSelectedFriendName": "gqrewavdscx"
+    "confirmationPending": false,
+    "lastSelectedFriendName": ""
   }
 }

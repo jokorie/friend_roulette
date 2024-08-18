@@ -245,3 +245,22 @@ body {
     color: #007BFF; /* Change the color to a standout blue */
     text-decoration: underline; /* Underline the text */
 }
+
+/* Styling for the toggle view */
+#view-toggle {
+    display: flex;
+    align-items: center;
+    margin-bottom: 20px;
+    font-size: 16px;
+    color: #333;
+}
+
+#view-toggle label {
+    margin-right: 10px;
+}
+
+#view-toggle input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+}

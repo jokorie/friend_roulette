@@ -17,7 +17,7 @@ function createFriendsData() {
     return {
         friends: [],
         appState: {
-            lastSelectedName: "",
+            lastSelectedFriendName: "",
             confirmationPending: false,
         },
     };

@@ -12,7 +12,7 @@ interface Friend {
 }
 
 interface AppState {
-    lastSelectedName: string;
+    lastSelectedFriendName: string;
     confirmationPending: boolean;
 }
 
@@ -25,7 +25,7 @@ function createFriendsData(): FriendsData {
     return {
         friends: [],
         appState: {
-            lastSelectedName: "",
+            lastSelectedFriendName: "",
             confirmationPending: false,
         },
     };
