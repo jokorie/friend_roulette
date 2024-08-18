@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { Request, Response } from 'express';
 import bodyParser from 'body-parser';
 import fs from 'fs';
 import path, { dirname } from 'path';
@@ -20,6 +20,16 @@ interface FriendsData {
     appState: AppState;
 }
 
+function createFriendsData(): FriendsData {
+    return {
+        friends: [],
+        appState: {
+            lastSelectedIndex: undefined,
+            confirmationPending: false,
+        },
+    };
+}
+
 const app = express();
 const port = 3000;
 
@@ -30,7 +40,6 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const friendsFilePath = path.join(__dirname, 'friends.json');
 
-
 // Helper function to read data from the file
 function readDataFromFile(): Promise<FriendsData> {
     return new Promise((resolve, reject) => {
@@ -38,7 +47,17 @@ function readDataFromFile(): Promise<FriendsData> {
             if (err) {
                 return reject('Failed to read data');
             }
-            resolve(JSON.parse(data) as FriendsData);
+
+            if (!data) {
+                resolve(createFriendsData()); // If file is empty, return default data
+            } else {
+                try {
+                    const parsedData = JSON.parse(data);
+                    resolve(parsedData as FriendsData);
+                } catch (parseError) {
+                    reject('Failed to parse data');
+                }
+            }
         });
     });
 }
@@ -61,7 +80,7 @@ app.get('/data', async (req: Request, res: Response) => {
         const data = await readDataFromFile();
         res.json(data);
     } catch (error) {
-        res.status(500).json({ error: error });
+        res.status(500).json({ error: String(error) }); // Ensure error is a string
     }
 });
 
@@ -72,7 +91,7 @@ app.post('/data', async (req: Request, res: Response) => {
         await writeDataToFile(newData);
         res.json({ message: 'Data saved successfully' });
     } catch (error) {
-        res.status(500).json({ error: error });
+        res.status(500).json({ error: String(error) }); // Ensure error is a string
     }
 });
 

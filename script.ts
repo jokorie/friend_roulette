@@ -15,11 +15,11 @@ type FriendsData = {
 
 document.addEventListener('DOMContentLoaded', async function () {
     let friendsData: FriendsData = await loadDataFromBackend();
+    console.log(friendsData);
     let friends = friendsData.friends;
     let appState = friendsData.appState;
 
     let selectedIndex = appState.lastSelectedIndex;
-    let confirmationPending = appState.confirmationPending;
     let currentHighlightIndex = 0;
     let intervalId: number | undefined;
 
@@ -122,7 +122,7 @@ document.addEventListener('DOMContentLoaded', async function () {
             if (spinCount >= maxSpins) {
                 clearInterval(intervalId);
                 intervalId = undefined;
-                confirmationPending = true;
+                appState.confirmationPending = true;
                 appState.lastSelectedIndex = selectedIndex;
                 appState.confirmationPending = true;
                 showPopup();  // Show the popup after spinning
@@ -158,4 +158,5 @@ document.addEventListener('DOMContentLoaded', async function () {
 
     // Load state and render grid on page load
     renderFriendsGrid();
+    if (appState.confirmationPending) showPopup();
 });

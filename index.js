@@ -13,6 +13,15 @@ import fs from 'fs';
 import path, { dirname } from 'path';
 import { fileURLToPath } from 'url';
 import cors from 'cors';
+function createFriendsData() {
+    return {
+        friends: [],
+        appState: {
+            lastSelectedIndex: undefined,
+            confirmationPending: false,
+        },
+    };
+}
 const app = express();
 const port = 3000;
 app.use(bodyParser.json());
@@ -27,7 +36,18 @@ function readDataFromFile() {
             if (err) {
                 return reject('Failed to read data');
             }
-            resolve(JSON.parse(data));
+            if (!data) {
+                resolve(createFriendsData()); // If file is empty, return default data
+            }
+            else {
+                try {
+                    const parsedData = JSON.parse(data);
+                    resolve(parsedData);
+                }
+                catch (parseError) {
+                    reject('Failed to parse data');
+                }
+            }
         });
     });
 }
@@ -49,7 +69,7 @@ app.get('/data', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         res.json(data);
     }
     catch (error) {
-        res.status(500).json({ error: error });
+        res.status(500).json({ error: String(error) }); // Ensure error is a string
     }
 }));
 // Endpoint to add or update a friend and/or app state
@@ -60,7 +80,7 @@ app.post('/data', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         res.json({ message: 'Data saved successfully' });
     }
     catch (error) {
-        res.status(500).json({ error: error });
+        res.status(500).json({ error: String(error) }); // Ensure error is a string
     }
 }));
 // Start the server
