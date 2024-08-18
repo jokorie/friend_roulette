@@ -4,39 +4,43 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Friend Roulette</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css"> <!-- Link to the CSS file -->
 </head>
 <body>
-    <div id="app">
-        <h1>Friend Roulette</h1>
 
-        <!-- Add Friend Section -->
-        <div>
-            <input type="text" id="friend-name" placeholder="Enter friend's name">
-            <div id="cadence-selector">
-                <div class="cadence-box" data-cadence="7">1 Week</div>
-                <div class="cadence-box" data-cadence="14">2 Weeks</div>
-                <div class="cadence-box" data-cadence="28">4 Weeks</div>
+    <!-- Container that holds both the roulette panel and confirmation panel -->
+    <div id="container">
+        <!-- Header Section -->
+        <header id="app-header">
+            <h1>Friend Roulette</h1>
+        </header>
+    
+        <div id="content-container">
+            <!-- Confirmation Panel -->
+            <div id="confirmation-panel">
+                <h2 id="popup-message">Confirm that you have contacted <span class="friend-name"></span></h2>
+                <button id="confirm-button" disabled>Confirm Contact</button>
             </div>
-            <input type="hidden" id="friend-cadence" value="7">
-            <button id="add-friend">Add Friend</button>
+    
+            <!-- Friend Roulette Panel -->
+            <div id="roulette-panel">
+                <!-- Friend Roulette Content (Inputs, Buttons, Grid, etc.) -->
+                <input type="text" id="friend-name" placeholder="Enter friend's name">
+                <div id="cadence-selector">
+                    <div class="cadence-box" data-cadence="7">1 Week</div>
+                    <div class="cadence-box" data-cadence="14">2 Weeks</div>
+                    <div class="cadence-box" data-cadence="28">4 Weeks</div>
+                </div>
+                <input type="hidden" id="friend-cadence" value="7">
+                <button id="add-friend">Add Friend</button>
+                <div id="grid-container"></div>
+                <button id="spin-button">Spin the Wheel</button>
+            </div>
         </div>
-
-        <!-- Grid Container -->
-        <div id="grid-container"></div>
-        
-        <!-- Spin Button -->
-        <button id="spin-button">Spin the Wheel</button>
     </div>
+    
+    
 
-    <!-- Popup Modal -->
-    <div id="popup-modal">
-        <div id="popup-content">
-            <h2 id="popup-message">Confirm that you have contacted XYZ</h2>
-            <button id="confirm-button" disabled>Confirm Contact</button>
-        </div>
-    </div>
-
-    <script src="script.js"></script>
+    <script src="script.js"></script> <!-- Link to your JavaScript file -->
 </body>
 </html>

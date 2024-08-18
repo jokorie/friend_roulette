@@ -7,38 +7,98 @@ body {
     height: 100vh;
     margin: 0;
     background-color: #f5f7fa;
+    overflow: hidden; /* Prevents scrolling when the panel shifts */
 }
 
-/* Main app container styling */
-#app {
+/* Main container that holds everything */
+#container {
+    width: 100%;
+    max-width: 1200px; /* Adjusted to give more space */
+    transition: all 0.5s ease; /* Smooth transition for resizing panels */
+    display: flex;
+    flex-direction: column; /* Header at the top, content below */
+}
+
+/* Header Section for the Title */
+#app-header {
+    background-color: #ffffff;
+    width: 100%;
+    padding: 15px 20px; /* Increased padding */
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
     text-align: center;
+    margin-bottom: 10px; /* Adds space between header and content */
+    border-radius: 15px;
+}
+
+/* Header Title Styling */
+#app-header h1 {
+    margin: 0;
+    font-size: 3rem; /* Increase size for emphasis */
+    color: #007BFF; /* Blue color to match the app's theme */
+}
+
+/* Container for both panels */
+#content-container {
+    display: flex;
+    flex-direction: row; /* Side-by-side layout */
+    width: 100%;
+    height: 100%;
+    transition: all 0.5s ease; /* Smooth transition for resizing panels */
+}
+
+/* Confirmation Panel */
+#confirmation-panel {
+    background-color: #ffffff;
+    padding: 20px;
+    border-radius: 15px 0 0 15px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    width: 0; /* Start hidden */
+    overflow: hidden; /* Prevents content from being seen until fully visible */
+    transition: all 0.5s ease; /* Smooth transition for panel resize */
+    opacity: 0; /* Start hidden */
+    display: flex;
+    flex-direction: column;
+    justify-content: center; /* Align content to the center */
+    align-items: center; /* Align items to the center */
+}
+
+/* When the confirmation panel is active */
+#container.split #confirmation-panel {
+    width: 50%; /* Takes up half the space when active */
+    opacity: 1; /* Make the panel visible */
+}
+
+/* Friend Roulette Panel */
+#roulette-panel {
     background-color: #ffffff;
     padding: 20px 30px;
     border-radius: 15px;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-    max-width: 400px;
     width: 100%;
+    transition: all 0.5s ease; /* Smooth transition for panel resize */
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start; /* Aligns the content at the top */
 }
 
-/* Heading styling */
-#app h1 {
-    font-size: 2rem;
-    color: #333;
-    margin-bottom: 20px;
+/* When the confirmation panel is active */
+#container.split #roulette-panel {
+    width: 50%; /* Takes up half the space when confirmation panel is active */
 }
 
 /* Input and button styling */
-#app input[type="text"] {
+#roulette-panel input[type="text"] {
     padding: 10px;
-    width: 70%;
+    width: 100%; /* Full width input */
     border: 1px solid #ccc;
     border-radius: 5px;
     font-size: 16px;
-    margin-right: 10px;
+    margin-bottom: 10px; /* Added bottom margin */
     transition: border-color 0.3s ease-in-out;
 }
 
-#app input[type="text"]:focus {
+#roulette-panel input[type="text"]:focus {
     border-color: #007BFF;
     outline: none;
 }
@@ -52,38 +112,67 @@ body {
     color: white;
     cursor: pointer;
     transition: background-color 0.3s ease-in-out;
+    margin-bottom: 20px; /* Added bottom margin */
 }
 
 #add-friend:hover {
     background-color: #0056b3;
 }
 
+/* Cadence selector styling */
+#cadence-selector {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 20px; /* Added margin-bottom */
+}
+
+.cadence-box {
+    flex: 1;
+    padding: 10px 0;
+    border: 2px solid #007BFF;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s, color 0.3s;
+    text-align: center;
+    font-size: 16px;
+}
+
+.cadence-box:hover, .cadence-box.selected {
+    background-color: #007BFF;
+    color: white;
+}
+
 /* Grid container styling */
 #grid-container {
     display: grid;
-    grid-template-columns: repeat(3, 100px);
-    grid-template-rows: repeat(3, 100px);
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
     gap: 10px;
     justify-content: center;
     margin-top: 20px;
+    max-width: 320px;
 }
 
 /* Grid item styling */
 .grid-item {
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
-    padding: 10px;
+    justify-content: center;
+    align-items: center;
+    padding: 15px;
     border: 2px solid #007BFF;
-    border-radius: 5px;
+    border-radius: 10px;
     background-color: #f9f9f9;
     transition: background-color 0.3s, transform 0.3s, color 0.3s;
     font-size: 16px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+    width: 100%;
+    max-width: 100px;
+    box-sizing: border-box;
 }
 
 .grid-item:hover {
-    background-color: #ccc;
-    /* Optional: You might remove or adjust this to avoid interference with the highlight effect */
+    background-color: #eee;
     transform: scale(1.05);
 }
 
@@ -92,7 +181,14 @@ body {
     color: white;
 }
 
-/* Spin and Confirm buttons styling */
+/* Days since last contact styling */
+.days-since {
+    color: red;
+    font-size: 14px;
+    margin-top: 10px;
+}
+
+/* Spin button styling */
 #spin-button {
     margin-top: 20px;
     padding: 10px 20px;
@@ -109,46 +205,21 @@ body {
     background-color: #218838;
 }
 
-/* Popup modal styling */
-#popup-modal {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.7);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    visibility: hidden;
-    opacity: 0;
-    transition: visibility 0s, opacity 0.3s ease-in-out;
+/* Disabled spin button styling */
+#spin-button.disabled {
+    background-color: #ccc; /* Gray color for disabled state */
+    cursor: not-allowed;
 }
 
-#popup-modal.show {
-    visibility: visible;
-    opacity: 1;
+#spin-button.disabled:hover {
+    background-color: #ccc; /* Ensure it stays gray when hovering */
 }
 
-#popup-content {
-    background-color: #ffffff;
-    padding: 30px;
-    border-radius: 10px;
-    text-align: center;
-    max-width: 500px;
-    width: 90%;
-}
-
-#popup-content h2 {
-    margin-top: 0;
-    font-size: 24px;
-    color: #333;
-}
-
-#confirm-button {
+/* Confirmation panel button styling */
+#confirmation-panel button {
     margin-top: 20px;
     padding: 10px 20px;
-    font-size: 18px;
+    font-size: 16px;
     border: none;
     border-radius: 5px;
     background-color: #ffc107;
@@ -157,39 +228,20 @@ body {
     transition: background-color 0.3s ease-in-out;
 }
 
-#confirm-button:hover {
+#confirmation-panel button:hover {
     background-color: #e0a800;
 }
 
-#cadence-selector {
-    display: flex;
-    gap: 10px;
-    justify-content: center;
-    margin-top: 20px;
+/* Replace blue ring with faint gray line */
+:focus {
+    outline: 2px solid #ccc;
+    outline-offset: 2px;
 }
 
-.cadence-box {
-    padding: 10px 20px;
-    border: 2px solid #007BFF;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: background-color 0.3s, color 0.3s;
-    font-size: 16px;
-}
-
-.cadence-box:hover {
-    background-color: #007BFF;
-    color: white;
-}
-
-.cadence-box.selected {
-    background-color: #007BFF;
-    color: white;
-}
-
-/* Days since last contact styling */
-.days-since {
-    color: red;
-    font-size: 14px;
-    margin-top: 5px;
+/* Friend name emphasis in the confirmation panel */
+#popup-message .friend-name {
+    font-weight: bold;
+    font-size: 1.5em; /* Increase the font size */
+    color: #007BFF; /* Change the color to a standout blue */
+    text-decoration: underline; /* Underline the text */
 }
