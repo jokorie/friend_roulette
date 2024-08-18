@@ -3,10 +3,23 @@ type Friend = {
     lastContacted: Date | null;
 };
 
-document.addEventListener('DOMContentLoaded', function () {
-    let friends: Friend[] = [];
-    let selectedIndex: number | undefined;
-    let confirmationPending = false;
+type AppState = {
+    lastSelectedIndex: number | undefined;
+    confirmationPending: boolean;
+};
+
+type FriendsData = {
+    friends: Friend[];
+    appState: AppState;
+};
+
+document.addEventListener('DOMContentLoaded', async function () {
+    let friendsData: FriendsData = await loadDataFromBackend();
+    let friends = friendsData.friends;
+    let appState = friendsData.appState;
+
+    let selectedIndex = appState.lastSelectedIndex;
+    let confirmationPending = appState.confirmationPending;
     let currentHighlightIndex = 0;
     let intervalId: number | undefined;
 
@@ -16,49 +29,76 @@ document.addEventListener('DOMContentLoaded', function () {
     const popupModal = document.getElementById('popup-modal') as HTMLDivElement;
     const popupMessage = document.getElementById('popup-message') as HTMLHeadingElement;
 
-    document.getElementById('add-friend')?.addEventListener('click', function () {
+    document.getElementById('add-friend')?.addEventListener('click', async function () {
         const friendNameInput = document.getElementById('friend-name') as HTMLInputElement;
         const friendName = friendNameInput.value.trim();
         if (friendName) {
-            addOrUpdateFriend(friendName);
+            await addOrUpdateFriend(friendName);
+            friendsData = await loadDataFromBackend(); // Refresh data from backend
+            friends = friendsData.friends;
             renderFriendsGrid();
-            saveState();
             friendNameInput.value = '';
         }
     });
 
     // Confirmation button event listener
-    confirmButton.addEventListener('click', function () {
+    confirmButton.addEventListener('click', async function () {
         if (selectedIndex !== undefined) {
             friends[selectedIndex].lastContacted = new Date();  // Update last contacted date
+            appState.confirmationPending = false;  // No longer pending
+            await saveDataToBackend({ friends, appState });
             spinButton.disabled = false;  // Re-enable spin button
             hidePopup();  // Hide the popup after confirmation
-            saveState();
+            friendsData = await loadDataFromBackend(); // Refresh data from backend
+            friends = friendsData.friends;
+            renderFriendsGrid();
         }
     });
 
     // Spin the wheel button event listener
     spinButton.addEventListener('click', spinWheel);
 
-    // Handle adding or updating a friend
-    function addOrUpdateFriend(friendName: string) {
-        const duplicated_index = friends.findIndex(friend => friend.name === friendName);
-        if (duplicated_index !== -1) {
-            friends[duplicated_index].lastContacted = null;
+    async function addOrUpdateFriend(friendName: string) {
+        const existingFriend = friends.find(friend => friend.name === friendName);
+        if (existingFriend) {
+            existingFriend.lastContacted = null;
         } else {
-            friends.push({ name: friendName, lastContacted: null });
+            const newFriend: Friend = { name: friendName, lastContacted: null };
+            friends.push(newFriend);
         }
+        await saveDataToBackend({ friends, appState });
+    }
+
+    async function saveDataToBackend(data: FriendsData) {
+        await fetch('http://localhost:3000/data', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data),
+        });
+    }
+
+    async function loadDataFromBackend(): Promise<FriendsData> {
+        const response = await fetch('http://localhost:3000/data');
+        if (!response.ok) {
+            throw new Error('Failed to load data');
+        }
+        return await response.json();
     }
 
     function renderFriendsGrid() {
         gridContainer.innerHTML = '';
-        friends.forEach((friend) => {
+        friends.forEach((friend, index) => {
             const div = document.createElement('div');
             div.classList.add('grid-item');
             div.textContent = friend.name;
             gridContainer.appendChild(div);
+
+            if (index === selectedIndex) {
+                div.classList.add('highlighted');
+            }
         });
-        highlightSelected();
     }
 
     // Spin the wheel and stop at a random friend
@@ -83,8 +123,10 @@ document.addEventListener('DOMContentLoaded', function () {
                 clearInterval(intervalId);
                 intervalId = undefined;
                 confirmationPending = true;
+                appState.lastSelectedIndex = selectedIndex;
+                appState.confirmationPending = true;
                 showPopup();  // Show the popup after spinning
-                saveState();
+                saveDataToBackend({ friends, appState });  // Save the updated state
             }
         }, 100);
     }
@@ -106,7 +148,7 @@ document.addEventListener('DOMContentLoaded', function () {
         setTimeout(() => {
             popupModal.classList.add('show');
             confirmButton.disabled = false;
-        }, 500); // Delay of 1 second (1000 milliseconds)
+        }, 500); // Delay of 0.5 seconds (500 milliseconds)
     }
 
     // Hide the popup modal
@@ -114,38 +156,6 @@ document.addEventListener('DOMContentLoaded', function () {
         popupModal.classList.remove('show');
     }
 
-    // Load the state from localStorage
-    function loadState() {
-        const storedFriends = localStorage.getItem('friends');
-        const storedIndex = localStorage.getItem('selectedIdx');
-        const storedConfirmationPending = localStorage.getItem('pending');
-        
-        if (storedFriends !== null && storedFriends) {
-            friends = JSON.parse(storedFriends);
-        }
-        if (storedIndex !== null && storedIndex !== "undefined") {
-            selectedIndex = JSON.parse(storedIndex);
-        }
-        if (storedConfirmationPending !== null) {
-            confirmationPending = JSON.parse(storedConfirmationPending);
-        }
-        renderState();
-    }
-
-    function renderState() {
-        renderFriendsGrid();
-        spinButton.disabled = confirmationPending && friends.length !== 0;
-        if (confirmationPending) {
-            showPopup();
-        }
-    }
-
-    function saveState() {
-        localStorage.setItem('friends', JSON.stringify(friends));
-        localStorage.setItem('selectedIdx', JSON.stringify(selectedIndex));
-        localStorage.setItem('pending', JSON.stringify(confirmationPending));
-    }
-
     // Load state and render grid on page load
-    loadState();
+    renderFriendsGrid();
 });

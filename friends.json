@@ -1,0 +1,16 @@
+{
+  "friends": [
+    {
+      "name": "John Doe",
+      "lastContacted": "2024-08-10T12:34:56Z"
+    },
+    {
+      "name": "Jane Smith",
+      "lastContacted": "2024-08-18T03:52:15.446Z"
+    }
+  ],
+  "appState": {
+    "lastSelectedIndex": 0,
+    "confirmationPending": true
+  }
+}
