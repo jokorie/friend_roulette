@@ -1,130 +1,232 @@
 "use strict";
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+function createFriend(name, cadence) {
+    return {
+        name,
+        lastContacted: null,
+        cadence, // Set the desired cadence in days
+    };
+}
+function getDaysSinceLastContact(friend) {
+    if (friend.lastContacted === null) {
+        return -1; // If never contacted, return 0 days
+    }
+    const now = new Date();
+    const differenceInTime = now.getTime() - friend.lastContacted.getTime();
+    const differenceInDays = Math.floor(differenceInTime / (1000 * 3600 * 24));
+    return differenceInDays;
+}
 document.addEventListener('DOMContentLoaded', function () {
-    var _a;
-    let friends = [];
-    let selectedIndex;
-    let confirmationPending = false;
-    let currentHighlightIndex = 0;
-    let intervalId;
-    const gridContainer = document.getElementById('grid-container');
-    const spinButton = document.getElementById('spin-button');
-    const confirmButton = document.getElementById('confirm-button');
-    const popupModal = document.getElementById('popup-modal');
-    const popupMessage = document.getElementById('popup-message');
-    (_a = document.getElementById('add-friend')) === null || _a === void 0 ? void 0 : _a.addEventListener('click', function () {
-        const friendNameInput = document.getElementById('friend-name');
-        const friendName = friendNameInput.value.trim();
-        if (friendName) {
-            addOrUpdateFriend(friendName);
-            renderFriendsGrid();
-            saveState();
-            friendNameInput.value = '';
-        }
-    });
-    // Confirmation button event listener
-    confirmButton.addEventListener('click', function () {
-        if (selectedIndex !== undefined) {
-            friends[selectedIndex].lastContacted = new Date(); // Update last contacted date
-            spinButton.disabled = false; // Re-enable spin button
-            hidePopup(); // Hide the popup after confirmation
-            saveState();
-        }
-    });
-    // Spin the wheel button event listener
-    spinButton.addEventListener('click', spinWheel);
-    // Handle adding or updating a friend
-    function addOrUpdateFriend(friendName) {
-        const duplicated_index = friends.findIndex(friend => friend.name === friendName);
-        if (duplicated_index !== -1) {
-            friends[duplicated_index].lastContacted = null;
-        }
-        else {
-            friends.push({ name: friendName, lastContacted: null });
-        }
-    }
-    function renderFriendsGrid() {
-        gridContainer.innerHTML = '';
-        friends.forEach((friend) => {
-            const div = document.createElement('div');
-            div.classList.add('grid-item');
-            div.textContent = friend.name;
-            gridContainer.appendChild(div);
-        });
-        highlightSelected();
-    }
-    // Spin the wheel and stop at a random friend
-    function spinWheel() {
-        if (intervalId || friends.length === 0) {
-            return;
-        }
-        spinButton.disabled = true; // Disable spin button until confirmation
-        let spinCount = 0;
-        const maxSpins = Math.floor(Math.random() * 20) + 20;
-        const gridItems = document.querySelectorAll('.grid-item');
-        intervalId = window.setInterval(() => {
-            selectedIndex = (currentHighlightIndex + 1) % gridItems.length;
-            currentHighlightIndex = selectedIndex; // Update currentHighlightIndex
-            highlightSelected();
-            spinCount++;
-            if (spinCount >= maxSpins) {
-                clearInterval(intervalId);
-                intervalId = undefined;
-                confirmationPending = true;
-                showPopup(); // Show the popup after spinning
-                saveState();
+    return __awaiter(this, void 0, void 0, function* () {
+        var _a;
+        console.log("start");
+        let friendsData = yield loadDataFromBackend();
+        console.log("end");
+        console.log(friendsData);
+        let friends = friendsData.friends;
+        let appState = friendsData.appState;
+        let selectedFriendName = appState.lastSelectedFriendName;
+        let intervalId;
+        const gridContainer = document.getElementById('grid-container');
+        const spinButton = document.getElementById('spin-button');
+        const confirmButton = document.getElementById('confirm-button');
+        const popupModal = document.getElementById('popup-modal');
+        const popupMessage = document.getElementById('popup-message');
+        const cadenceSelector = document.getElementById('cadence-selector');
+        const cadenceInput = document.getElementById('friend-cadence');
+        cadenceSelector.addEventListener('click', function (e) {
+            const target = e.target;
+            if (target.classList.contains('cadence-box')) {
+                // Remove 'selected' class from all boxes
+                document.querySelectorAll('.cadence-box').forEach(box => {
+                    box.classList.remove('selected');
+                });
+                // Add 'selected' class to the clicked box
+                target.classList.add('selected');
+                // Update the hidden input with the selected cadence value
+                const selectedCadence = target.getAttribute('data-cadence');
+                if (selectedCadence) {
+                    cadenceInput.value = selectedCadence;
+                }
             }
-        }, 100);
-    }
-    function highlightSelected() {
-        if (selectedIndex === undefined) {
-            throw new Error("Selected index is undefined. Cannot highlight friend");
+        });
+        (_a = document.getElementById('add-friend')) === null || _a === void 0 ? void 0 : _a.addEventListener('click', function () {
+            return __awaiter(this, void 0, void 0, function* () {
+                const friendNameInput = document.getElementById('friend-name');
+                const cadenceInput = document.getElementById('friend-cadence');
+                const friendName = friendNameInput.value.trim();
+                const cadence = parseInt(cadenceInput.value.trim(), 10);
+                if (friendName && !isNaN(cadence)) {
+                    yield addOrUpdateFriend(friendName, cadence);
+                    renderFriendsGrid();
+                    friendNameInput.value = '';
+                    cadenceInput.value = '';
+                }
+            });
+        });
+        // Confirmation button event listener
+        confirmButton.addEventListener('click', function () {
+            return __awaiter(this, void 0, void 0, function* () {
+                const selectedFriend = friends.find((friend) => friend.name === selectedFriendName);
+                if (selectedFriend !== undefined) {
+                    selectedFriend.lastContacted = new Date(); // Update last contacted date
+                    appState.confirmationPending = false; // No longer pending
+                    yield saveDataToBackend({ friends, appState });
+                    spinButton.disabled = false; // Re-enable spin button
+                    hidePopup(); // Hide the popup after confirmation
+                    friendsData = yield loadDataFromBackend(); // Refresh data from backend
+                    friends = friendsData.friends;
+                    renderFriendsGrid();
+                }
+            });
+        });
+        // Spin the wheel button event listener
+        spinButton.addEventListener('click', spinWheel);
+        function addOrUpdateFriend(friendName, cadence) {
+            return __awaiter(this, void 0, void 0, function* () {
+                const existingFriend = friends.find(friend => friend.name === friendName);
+                if (existingFriend) {
+                    existingFriend.lastContacted = null;
+                    existingFriend.cadence = cadence;
+                }
+                else {
+                    const newFriend = { name: friendName, lastContacted: null, cadence };
+                    friends.push(newFriend);
+                }
+                yield saveDataToBackend({ friends, appState });
+            });
         }
-        const gridItems = document.querySelectorAll('.grid-item');
-        gridItems.forEach(item => item.classList.remove('highlighted'));
-        gridItems[selectedIndex].classList.add('highlighted');
-    }
-    // Show the popup modal
-    function showPopup() {
-        if (selectedIndex !== undefined) {
-            popupMessage.textContent = `Confirm that you have contacted ${friends[selectedIndex].name}`;
+        function saveDataToBackend(data) {
+            return __awaiter(this, void 0, void 0, function* () {
+                yield fetch('http://localhost:3000/data', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data),
+                });
+            });
         }
-        setTimeout(() => {
-            popupModal.classList.add('show');
-            confirmButton.disabled = false;
-        }, 500); // Delay of 1 second (1000 milliseconds)
-    }
-    // Hide the popup modal
-    function hidePopup() {
-        popupModal.classList.remove('show');
-    }
-    // Load the state from localStorage
-    function loadState() {
-        const storedFriends = localStorage.getItem('friends');
-        const storedIndex = localStorage.getItem('selectedIdx');
-        const storedConfirmationPending = localStorage.getItem('pending');
-        if (storedFriends !== null && storedFriends) {
-            friends = JSON.parse(storedFriends);
+        function loadDataFromBackend() {
+            return __awaiter(this, void 0, void 0, function* () {
+                console.log("before response");
+                const response = yield fetch('http://localhost:3000/data');
+                console.log(response);
+                if (!response.ok) {
+                    throw new Error('Failed to load data');
+                }
+                return yield response.json();
+            });
         }
-        if (storedIndex !== null && storedIndex !== "undefined") {
-            selectedIndex = JSON.parse(storedIndex);
+        function shouldRenderFriend(friend) {
+            if (!friend.lastContacted) {
+                return true; // If never contacted, render the friend
+            }
+            const now = new Date();
+            const lastContactedDate = new Date(friend.lastContacted);
+            const daysSinceLastContact = Math.floor((now.getTime() - lastContactedDate.getTime()) / (1000 * 60 * 60 * 24));
+            return daysSinceLastContact >= friend.cadence;
         }
-        if (storedConfirmationPending !== null) {
-            confirmationPending = JSON.parse(storedConfirmationPending);
+        function renderFriendsGrid() {
+            gridContainer.innerHTML = '';
+            friends.forEach((friend, index) => {
+                if (shouldRenderFriend(friend)) {
+                    const div = document.createElement('div');
+                    div.classList.add('grid-item');
+                    const nameElement = document.createElement('div');
+                    nameElement.classList.add('friend-name'); // Add a specific class for the name element
+                    nameElement.textContent = friend.name;
+                    const daysSinceLastContact = getDaysSinceLastContact(friend);
+                    const daysElement = document.createElement('div');
+                    daysElement.classList.add('days-since');
+                    daysElement.textContent = (daysSinceLastContact === -1)
+                        ? 'Never contacted'
+                        : `${daysSinceLastContact} days since last contact`;
+                    div.appendChild(nameElement);
+                    div.appendChild(daysElement);
+                    gridContainer.appendChild(div);
+                    if (friend.name === selectedFriendName) {
+                        div.classList.add('highlighted');
+                    }
+                }
+            });
         }
-        renderState();
-    }
-    function renderState() {
+        // Spin the wheel and stop at a random friend
+        function spinWheel() {
+            const gridItems = document.querySelectorAll('.grid-item');
+            if (intervalId || gridItems.length === 0) {
+                return;
+            }
+            let currentHighlightIndex = 0;
+            spinButton.disabled = true; // Disable spin button until confirmation
+            let spinCount = 0;
+            const maxSpins = Math.floor(Math.random() * 20) + 20;
+            const namesSet = new Set();
+            gridItems.forEach(item => {
+                var _a;
+                const nameElement = item.querySelector('.friend-name');
+                const name = (_a = nameElement === null || nameElement === void 0 ? void 0 : nameElement.textContent) === null || _a === void 0 ? void 0 : _a.trim(); // Get the name from the specific name element
+                if (name) {
+                    namesSet.add(name); // Add the name to the set
+                }
+            });
+            console.log(namesSet);
+            intervalId = window.setInterval(() => {
+                currentHighlightIndex = (currentHighlightIndex + 1) % friends.length;
+                while (!namesSet.has(friends[currentHighlightIndex].name)) {
+                    currentHighlightIndex = (currentHighlightIndex + 1) % friends.length;
+                }
+                selectedFriendName = friends[currentHighlightIndex].name; // Update currentHighlightIndex
+                highlightSelected();
+                spinCount++;
+                if (spinCount >= maxSpins) {
+                    clearInterval(intervalId);
+                    intervalId = undefined;
+                    appState.lastSelectedFriendName = selectedFriendName;
+                    appState.confirmationPending = true;
+                    showPopup(); // Show the popup after spinning
+                    saveDataToBackend({ friends, appState }); // Save the updated state
+                }
+            }, 100);
+        }
+        function highlightSelected() {
+            const gridItems = document.querySelectorAll('.grid-item');
+            gridItems.forEach(item => {
+                var _a;
+                const name = (_a = item.textContent) === null || _a === void 0 ? void 0 : _a.trim(); // Get the name from the grid item
+                if (name === selectedFriendName) {
+                    item.classList.add('highlighted');
+                }
+                else {
+                    item.classList.remove('highlighted');
+                }
+            });
+        }
+        // Show the popup modal
+        function showPopup() {
+            if (selectedFriendName !== "") {
+                popupMessage.textContent = `Confirm that you have contacted ${selectedFriendName}`;
+            }
+            setTimeout(() => {
+                popupModal.classList.add('show');
+                confirmButton.disabled = false;
+            }, 500); // Delay of 0.5 seconds (500 milliseconds)
+        }
+        // Hide the popup modal
+        function hidePopup() {
+            popupModal.classList.remove('show');
+        }
+        // Load state and render grid on page load
         renderFriendsGrid();
-        spinButton.disabled = confirmationPending && friends.length !== 0;
-        if (confirmationPending) {
+        if (appState.confirmationPending)
             showPopup();
-        }
-    }
-    function saveState() {
-        localStorage.setItem('friends', JSON.stringify(friends));
-        localStorage.setItem('selectedIdx', JSON.stringify(selectedIndex));
-        localStorage.setItem('pending', JSON.stringify(confirmationPending));
-    }
-    // Load state and render grid on page load
-    loadState();
+    });
 });
