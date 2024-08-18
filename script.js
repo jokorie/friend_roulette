@@ -15,6 +15,15 @@ function createFriend(name, cadence) {
         cadence, // Set the desired cadence in days
     };
 }
+function getDaysSinceLastContact(friend) {
+    if (friend.lastContacted === null) {
+        return -1; // If never contacted, return 0 days
+    }
+    const now = new Date();
+    const differenceInTime = now.getTime() - friend.lastContacted.getTime();
+    const differenceInDays = Math.floor(differenceInTime / (1000 * 3600 * 24));
+    return differenceInDays;
+}
 document.addEventListener('DOMContentLoaded', function () {
     return __awaiter(this, void 0, void 0, function* () {
         var _a;
@@ -31,6 +40,24 @@ document.addEventListener('DOMContentLoaded', function () {
         const confirmButton = document.getElementById('confirm-button');
         const popupModal = document.getElementById('popup-modal');
         const popupMessage = document.getElementById('popup-message');
+        const cadenceSelector = document.getElementById('cadence-selector');
+        const cadenceInput = document.getElementById('friend-cadence');
+        cadenceSelector.addEventListener('click', function (e) {
+            const target = e.target;
+            if (target.classList.contains('cadence-box')) {
+                // Remove 'selected' class from all boxes
+                document.querySelectorAll('.cadence-box').forEach(box => {
+                    box.classList.remove('selected');
+                });
+                // Add 'selected' class to the clicked box
+                target.classList.add('selected');
+                // Update the hidden input with the selected cadence value
+                const selectedCadence = target.getAttribute('data-cadence');
+                if (selectedCadence) {
+                    cadenceInput.value = selectedCadence;
+                }
+            }
+        });
         (_a = document.getElementById('add-friend')) === null || _a === void 0 ? void 0 : _a.addEventListener('click', function () {
             return __awaiter(this, void 0, void 0, function* () {
                 const friendNameInput = document.getElementById('friend-name');
@@ -114,7 +141,17 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (shouldRenderFriend(friend)) {
                     const div = document.createElement('div');
                     div.classList.add('grid-item');
-                    div.textContent = friend.name;
+                    const nameElement = document.createElement('div');
+                    nameElement.classList.add('friend-name'); // Add a specific class for the name element
+                    nameElement.textContent = friend.name;
+                    const daysSinceLastContact = getDaysSinceLastContact(friend);
+                    const daysElement = document.createElement('div');
+                    daysElement.classList.add('days-since');
+                    daysElement.textContent = (daysSinceLastContact === -1)
+                        ? 'Never contacted'
+                        : `${daysSinceLastContact} days since last contact`;
+                    div.appendChild(nameElement);
+                    div.appendChild(daysElement);
                     gridContainer.appendChild(div);
                     if (friend.name === selectedFriendName) {
                         div.classList.add('highlighted');
@@ -135,11 +172,13 @@ document.addEventListener('DOMContentLoaded', function () {
             const namesSet = new Set();
             gridItems.forEach(item => {
                 var _a;
-                const name = (_a = item.textContent) === null || _a === void 0 ? void 0 : _a.trim(); // Get the name from the grid item
+                const nameElement = item.querySelector('.friend-name');
+                const name = (_a = nameElement === null || nameElement === void 0 ? void 0 : nameElement.textContent) === null || _a === void 0 ? void 0 : _a.trim(); // Get the name from the specific name element
                 if (name) {
-                    namesSet.add(name);
+                    namesSet.add(name); // Add the name to the set
                 }
             });
+            console.log(namesSet);
             intervalId = window.setInterval(() => {
                 currentHighlightIndex = (currentHighlightIndex + 1) % friends.length;
                 while (!namesSet.has(friends[currentHighlightIndex].name)) {

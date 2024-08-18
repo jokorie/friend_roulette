@@ -33,8 +33,6 @@ const friendsFilePath = path.join(__dirname, 'friends.json');
 function readDataFromFile() {
     return new Promise((resolve, reject) => {
         fs.readFile(friendsFilePath, 'utf8', (err, data) => {
-            console.log(err);
-            console.log(data);
             if (err) {
                 if (err.code === 'ENOENT') {
                     // File does not exist, create it with default data

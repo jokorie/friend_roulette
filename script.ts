@@ -22,6 +22,17 @@ function createFriend(name: string, cadence: number): Friend {
     };
 }
 
+function getDaysSinceLastContact(friend: Friend): number {
+    if (friend.lastContacted === null) {
+        return -1; // If never contacted, return 0 days
+    }
+    const now = new Date();
+    const differenceInTime = now.getTime() - friend.lastContacted.getTime();
+    const differenceInDays = Math.floor(differenceInTime / (1000 * 3600 * 24));
+    return differenceInDays;
+}
+
+
 document.addEventListener('DOMContentLoaded', async function () {
     console.log("start")
     let friendsData: FriendsData = await loadDataFromBackend();
@@ -38,6 +49,28 @@ document.addEventListener('DOMContentLoaded', async function () {
     const confirmButton = document.getElementById('confirm-button') as HTMLButtonElement;
     const popupModal = document.getElementById('popup-modal') as HTMLDivElement;
     const popupMessage = document.getElementById('popup-message') as HTMLHeadingElement;
+
+    const cadenceSelector = document.getElementById('cadence-selector') as HTMLDivElement;
+    const cadenceInput = document.getElementById('friend-cadence') as HTMLInputElement;
+
+    cadenceSelector.addEventListener('click', function (e) {
+        const target = e.target as HTMLElement;
+        if (target.classList.contains('cadence-box')) {
+            // Remove 'selected' class from all boxes
+            document.querySelectorAll('.cadence-box').forEach(box => {
+                box.classList.remove('selected');
+            });
+
+            // Add 'selected' class to the clicked box
+            target.classList.add('selected');
+
+            // Update the hidden input with the selected cadence value
+            const selectedCadence = target.getAttribute('data-cadence');
+            if (selectedCadence) {
+                cadenceInput.value = selectedCadence;
+            }
+        }
+    });
 
     document.getElementById('add-friend')?.addEventListener('click', async function () {
         const friendNameInput = document.getElementById('friend-name') as HTMLInputElement;
@@ -123,15 +156,29 @@ document.addEventListener('DOMContentLoaded', async function () {
             if (shouldRenderFriend(friend)) {
                 const div = document.createElement('div');
                 div.classList.add('grid-item');
-                div.textContent = friend.name;
+                
+                const nameElement = document.createElement('div');
+                nameElement.classList.add('friend-name'); // Add a specific class for the name element
+                nameElement.textContent = friend.name;
+    
+                const daysSinceLastContact = getDaysSinceLastContact(friend);
+                const daysElement = document.createElement('div');
+                daysElement.classList.add('days-since');
+                daysElement.textContent = (daysSinceLastContact === -1)
+                    ? 'Never contacted'
+                    : `${daysSinceLastContact} days since last contact`;
+    
+                div.appendChild(nameElement);
+                div.appendChild(daysElement);
                 gridContainer.appendChild(div);
-
+    
                 if (friend.name === selectedFriendName) {
                     div.classList.add('highlighted');
                 }
             }
         });
     }
+    
 
     // Spin the wheel and stop at a random friend
     function spinWheel() {
@@ -148,11 +195,13 @@ document.addEventListener('DOMContentLoaded', async function () {
 
         const namesSet = new Set<string>();
         gridItems.forEach(item => {
-            const name = item.textContent?.trim(); // Get the name from the grid item
+            const nameElement = item.querySelector('.friend-name');
+            const name = nameElement?.textContent?.trim(); // Get the name from the specific name element
             if (name) {
-                namesSet.add(name);
+                namesSet.add(name); // Add the name to the set
             }
         });
+        console.log(namesSet);
 
         
 

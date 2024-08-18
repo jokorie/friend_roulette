@@ -71,19 +71,19 @@ body {
 /* Grid item styling */
 .grid-item {
     display: flex;
-    justify-content: center;
-    align-items: center;
-    background-color: #ddd;
-    border-radius: 10px;
-    font-size: 18px;
-    font-weight: bold;
-    color: #555;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 10px;
+    border: 2px solid #007BFF;
+    border-radius: 5px;
+    background-color: #f9f9f9;
     transition: background-color 0.3s, transform 0.3s, color 0.3s;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    font-size: 16px;
 }
 
 .grid-item:hover {
     background-color: #ccc;
+    /* Optional: You might remove or adjust this to avoid interference with the highlight effect */
     transform: scale(1.05);
 }
 
@@ -159,4 +159,37 @@ body {
 
 #confirm-button:hover {
     background-color: #e0a800;
+}
+
+#cadence-selector {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-top: 20px;
+}
+
+.cadence-box {
+    padding: 10px 20px;
+    border: 2px solid #007BFF;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s, color 0.3s;
+    font-size: 16px;
+}
+
+.cadence-box:hover {
+    background-color: #007BFF;
+    color: white;
+}
+
+.cadence-box.selected {
+    background-color: #007BFF;
+    color: white;
+}
+
+/* Days since last contact styling */
+.days-since {
+    color: red;
+    font-size: 14px;
+    margin-top: 5px;
 }

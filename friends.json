@@ -1,14 +1,29 @@
 {
   "friends": [
     {
-      "name": "Johnny",
-      "lastContacted": "2024-08-18T05:35:47.760Z",
-      "cadence": 3
+      "name": "hv",
+      "lastContacted": "2024-08-18T05:43:31.922Z",
+      "cadence": 7
+    },
+    {
+      "name": "Mo",
+      "lastContacted": "2024-08-18T06:06:43.402Z",
+      "cadence": 28
+    },
+    {
+      "name": "hugfk",
+      "lastContacted": "2024-08-18T06:04:21.646Z",
+      "cadence": 28
+    },
+    {
+      "name": "azdfhb",
+      "lastContacted": null,
+      "cadence": 14
     }
   ],
   "appState": {
-    "lastSelectedName": "",
-    "confirmationPending": false,
-    "lastSelectedFriendName": "Johnny"
+    "lastSelectedIndex": 0,
+    "confirmationPending": true,
+    "lastSelectedFriendName": "azdfhb"
   }
 }
