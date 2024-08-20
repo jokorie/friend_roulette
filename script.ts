@@ -1,12 +1,18 @@
+import { AssertionError } from "assert";
+import { assert } from "console";
+
 type Friend = {
     name: string;
     lastContacted: Date | null;
     cadence: number;
+    instantiationDate: Date;
 };
 
 type AppState = {
     lastSelectedFriendName: string; // default can be an empty string
     confirmationPending: boolean;
+    
+    // TODO: Add timestamp for when the pending request was set out
 };
 
 type FriendsData = {
@@ -14,13 +20,58 @@ type FriendsData = {
     appState: AppState;
 };
 
+function calculatePriorityScore(friend: Friend): number {
+    const daysSinceLastContact = getDaysSinceLastContact(friend.lastContacted);
+    const overdueBy = daysSinceLastContact - friend.cadence;
+    const scoreOffset = 1; // so the scores from the first two days are different
+
+    // Ensure there's a minimum weight, even if the contact is not overdue yet
+    return Math.max(scoreOffset, overdueBy+scoreOffset);
+}
+
+function assignWeights(friends: Friend[]): [Friend, number][] {
+    let totalPriority = 0;
+    const friends_and_scores : [Friend, number][]= friends.map(friend => {
+        const priorityScore = calculatePriorityScore(friend);
+        totalPriority += priorityScore;
+        return [friend, priorityScore]
+    });
+
+    friends_and_scores.forEach(sublist => {
+        sublist[1] /= totalPriority;
+    }
+    )
+
+    return friends_and_scores
+}
+
+function weightedRandomSelection(friends_and_scores: [Friend, number][]): Friend {
+    let r = Math.random();  // Generate a random number between 0 and 1
+    let cumulative = 0;
+
+    for (let i = 0; i < friends_and_scores.length; i++) {
+        cumulative += friends_and_scores[i][1];
+        if (r <= cumulative) {
+            return friends_and_scores[i][0];
+        }
+    }
+
+    // todo raise exception
+    return friends_and_scores[0][0];  // Fallback (shouldn’t happen if weights are normalized)
+}
+
+
+
 function createFriend(name: string, cadence: number): Friend {
     return {
         name,
         lastContacted: null,
         cadence, // Set the desired cadence in days
+        instantiationDate: new Date(),
     };
 }
+
+
 
 function getDaysSinceLastContact(date: Date | null): number {
     if (date === null) {
@@ -55,17 +106,53 @@ document.addEventListener('DOMContentLoaded', async function () {
     // Event listener for cadence selection
     cadenceSelector.addEventListener('click', function (e) {
         const target = e.target as HTMLElement;
+    
         if (target.classList.contains('cadence-box')) {
+            const alreadySelected = target.classList.contains('selected');
+    
+            // Remove 'selected' class from all boxes
             document.querySelectorAll('.cadence-box').forEach(box => {
                 box.classList.remove('selected');
             });
-            target.classList.add('selected');
-            const selectedCadence = target.getAttribute('data-cadence');
-            if (selectedCadence) {
-                cadenceInput.value = selectedCadence;
+    
+            if (!alreadySelected) {
+                // Add 'selected' class to the clicked box if it wasn't already selected
+                target.classList.add('selected');
+    
+                // Update the hidden input with the selected cadence value
+                const selectedCadence = target.getAttribute('data-cadence');
+                if (selectedCadence) {
+                    cadenceInput.value = selectedCadence;
+                }
+            } else {
+                // Clear the cadence input if the box was already selected (deselect it)
+                cadenceInput.value = '';
             }
         }
     });
+    
+    // Event listener for custom cadence input focus or click
+    document.getElementById('custom-cadence')?.addEventListener('focus', function () {
+        selectCustomCadenceBox();
+    });
+
+    document.getElementById('custom-cadence')?.addEventListener('click', function () {
+        selectCustomCadenceBox();
+    });
+
+    function selectCustomCadenceBox() {
+        const customCadenceInput = document.getElementById('custom-cadence') as HTMLInputElement;
+        document.querySelectorAll('.cadence-box').forEach(box => {
+            box.classList.remove('selected');
+        });
+        cadenceInput.value = "";
+        customCadenceInput.parentElement?.classList.add('selected');
+        if (customCadenceInput.value) {
+            cadenceInput.value = customCadenceInput.value;
+        }
+    }
+    
+    
 
     document.getElementById('add-friend')?.addEventListener('click', async function () {
         const friendNameInput = document.getElementById('friend-name') as HTMLInputElement;
@@ -110,7 +197,7 @@ document.addEventListener('DOMContentLoaded', async function () {
             existingFriend.lastContacted = null;
             existingFriend.cadence = cadence;
         } else {
-            const newFriend: Friend = { name: friendName, lastContacted: null, cadence};
+            const newFriend: Friend = { name: friendName, lastContacted: null, cadence, instantiationDate: new Date()};
             friends.push(newFriend);
         }
         await saveDataToBackend({ friends, appState });
@@ -151,6 +238,7 @@ document.addEventListener('DOMContentLoaded', async function () {
 
     // Function to render the friends grid
     function renderFriendsGrid() {
+        console.log("Rendering Friends");
         gridContainer.innerHTML = '';
         const showAll = showAllCheckbox.checked;
         
@@ -183,33 +271,31 @@ document.addEventListener('DOMContentLoaded', async function () {
     }
     
 
-    // Function to handle the spin wheel action
     function spinWheel() {
         const eligibleFriends = friends.filter(friend => shouldRenderFriend(friend));
         if (intervalId || eligibleFriends.length === 0) {
             return;
         }
 
+        const namesSet = new Set(eligibleFriends.map(friend => friend.name));
+
+        const friend_and_weight = assignWeights(eligibleFriends);
+    
+        const selectedFriend = weightedRandomSelection(friend_and_weight);
+
         let currentHighlightIndex = 0;
         spinButton.disabled = true;
 
-        let spinCount = 0;
-        const maxSpins = Math.floor(Math.random() * 20) + 20;
-
-        // Only consider friends who are due for contact
-        const namesSet = new Set(eligibleFriends.map(friend => friend.name));
-
+        let cycles = 6;
         intervalId = window.setInterval(() => {
             currentHighlightIndex = (currentHighlightIndex + 1) % friends.length;
             while (!namesSet.has(friends[currentHighlightIndex].name)) {
-                console.log("6");
                 currentHighlightIndex = (currentHighlightIndex + 1) % friends.length;
             }
             appState.lastSelectedFriendName = friends[currentHighlightIndex].name;
             highlightSelected();
-            spinCount++;
-
-            if (spinCount >= maxSpins) {
+            if (friends[currentHighlightIndex] == selectedFriend) cycles--;
+            if (cycles === 0) {
                 clearInterval(intervalId);
                 intervalId = undefined;
                 appState.confirmationPending = true;

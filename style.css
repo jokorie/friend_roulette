@@ -264,3 +264,64 @@ body {
     height: 20px;
     cursor: pointer;
 }
+
+/* Cadence selector styling for 2x2 grid */
+#cadence-selector {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr); /* 2 columns grid */
+    grid-gap: 10px; /* Space between boxes */
+    margin-bottom: 20px; /* Added margin-bottom */
+}
+
+.cadence-box {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 10px 0;
+    border: 2px solid #007BFF;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s, color 0.3s;
+    font-size: 16px;
+    text-align: center;
+    position: relative;
+}
+
+.cadence-box.selected, .cadence-box:hover {
+    background-color: #007BFF;
+    color: white;
+}
+
+.cadence-box input[type="number"] {
+    width: 70%; /* Custom input width */
+    padding: 5px;
+    border: none;
+    border-radius: 3px;
+    font-size: 14px;
+    text-align: center;
+}
+
+.cadence-box.custom-cadence {
+    position: relative;
+    padding: 0;
+}
+
+.cadence-box.custom-cadence input[type="number"] {
+    width: 100%;
+    height: 100%;
+    box-sizing: border-box;
+    background-color: transparent;
+    border: 2px solid transparent;
+    outline: none;
+    font-size: 16px;
+}
+
+.cadence-box.custom-cadence input[type="number"]:focus {
+    border-color: #007BFF;
+    background-color: white;
+}
+
+.cadence-box.custom-cadence input::placeholder {
+    color: #888;
+    font-style: italic;
+}

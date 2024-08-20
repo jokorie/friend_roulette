@@ -1,4 +1,3 @@
-"use strict";
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -8,11 +7,43 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+function calculatePriorityScore(friend) {
+    const daysSinceLastContact = getDaysSinceLastContact(friend.lastContacted);
+    const overdueBy = daysSinceLastContact - friend.cadence;
+    const scoreOffset = 1; // so the scores from the first two days are different
+    // Ensure there's a minimum weight, even if the contact is not overdue yet
+    return Math.max(scoreOffset, overdueBy + scoreOffset);
+}
+function assignWeights(friends) {
+    let totalPriority = 0;
+    const friends_and_scores = friends.map(friend => {
+        const priorityScore = calculatePriorityScore(friend);
+        totalPriority += priorityScore;
+        return [friend, priorityScore];
+    });
+    friends_and_scores.forEach(sublist => {
+        sublist[1] /= totalPriority;
+    });
+    return friends_and_scores;
+}
+function weightedRandomSelection(friends_and_scores) {
+    let r = Math.random(); // Generate a random number between 0 and 1
+    let cumulative = 0;
+    for (let i = 0; i < friends_and_scores.length; i++) {
+        cumulative += friends_and_scores[i][1];
+        if (r <= cumulative) {
+            return friends_and_scores[i][0];
+        }
+    }
+    // todo raise exception
+    return friends_and_scores[0][0]; // Fallback (shouldn’t happen if weights are normalized)
+}
 function createFriend(name, cadence) {
     return {
         name,
         lastContacted: null,
         cadence, // Set the desired cadence in days
+        instantiationDate: new Date(),
     };
 }
 function getDaysSinceLastContact(date) {
@@ -28,7 +59,7 @@ function getDaysSinceLastContact(date) {
 }
 document.addEventListener('DOMContentLoaded', function () {
     return __awaiter(this, void 0, void 0, function* () {
-        var _a;
+        var _a, _b, _c;
         // Load data from the backend and initialize the application
         let friendsData = yield loadDataFromBackend();
         let friends = friendsData.friends;
@@ -46,17 +77,46 @@ document.addEventListener('DOMContentLoaded', function () {
         cadenceSelector.addEventListener('click', function (e) {
             const target = e.target;
             if (target.classList.contains('cadence-box')) {
+                const alreadySelected = target.classList.contains('selected');
+                // Remove 'selected' class from all boxes
                 document.querySelectorAll('.cadence-box').forEach(box => {
                     box.classList.remove('selected');
                 });
-                target.classList.add('selected');
-                const selectedCadence = target.getAttribute('data-cadence');
-                if (selectedCadence) {
-                    cadenceInput.value = selectedCadence;
+                if (!alreadySelected) {
+                    // Add 'selected' class to the clicked box if it wasn't already selected
+                    target.classList.add('selected');
+                    // Update the hidden input with the selected cadence value
+                    const selectedCadence = target.getAttribute('data-cadence');
+                    if (selectedCadence) {
+                        cadenceInput.value = selectedCadence;
+                    }
+                }
+                else {
+                    // Clear the cadence input if the box was already selected (deselect it)
+                    cadenceInput.value = '';
                 }
             }
         });
-        (_a = document.getElementById('add-friend')) === null || _a === void 0 ? void 0 : _a.addEventListener('click', function () {
+        // Event listener for custom cadence input focus or click
+        (_a = document.getElementById('custom-cadence')) === null || _a === void 0 ? void 0 : _a.addEventListener('focus', function () {
+            selectCustomCadenceBox();
+        });
+        (_b = document.getElementById('custom-cadence')) === null || _b === void 0 ? void 0 : _b.addEventListener('click', function () {
+            selectCustomCadenceBox();
+        });
+        function selectCustomCadenceBox() {
+            var _a;
+            const customCadenceInput = document.getElementById('custom-cadence');
+            document.querySelectorAll('.cadence-box').forEach(box => {
+                box.classList.remove('selected');
+            });
+            cadenceInput.value = "";
+            (_a = customCadenceInput.parentElement) === null || _a === void 0 ? void 0 : _a.classList.add('selected');
+            if (customCadenceInput.value) {
+                cadenceInput.value = customCadenceInput.value;
+            }
+        }
+        (_c = document.getElementById('add-friend')) === null || _c === void 0 ? void 0 : _c.addEventListener('click', function () {
             return __awaiter(this, void 0, void 0, function* () {
                 const friendNameInput = document.getElementById('friend-name');
                 const friendName = friendNameInput.value.trim();
@@ -98,7 +158,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     existingFriend.cadence = cadence;
                 }
                 else {
-                    const newFriend = { name: friendName, lastContacted: null, cadence };
+                    const newFriend = { name: friendName, lastContacted: null, cadence, instantiationDate: new Date() };
                     friends.push(newFriend);
                 }
                 yield saveDataToBackend({ friends, appState });
@@ -137,6 +197,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
         // Function to render the friends grid
         function renderFriendsGrid() {
+            console.log("Rendering Friends");
             gridContainer.innerHTML = '';
             const showAll = showAllCheckbox.checked;
             friends.forEach(friend => {
@@ -162,28 +223,27 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             });
         }
-        // Function to handle the spin wheel action
         function spinWheel() {
             const eligibleFriends = friends.filter(friend => shouldRenderFriend(friend));
             if (intervalId || eligibleFriends.length === 0) {
                 return;
             }
+            const namesSet = new Set(eligibleFriends.map(friend => friend.name));
+            const friend_and_weight = assignWeights(eligibleFriends);
+            const selectedFriend = weightedRandomSelection(friend_and_weight);
             let currentHighlightIndex = 0;
             spinButton.disabled = true;
-            let spinCount = 0;
-            const maxSpins = Math.floor(Math.random() * 20) + 20;
-            // Only consider friends who are due for contact
-            const namesSet = new Set(eligibleFriends.map(friend => friend.name));
+            let cycles = 6;
             intervalId = window.setInterval(() => {
                 currentHighlightIndex = (currentHighlightIndex + 1) % friends.length;
                 while (!namesSet.has(friends[currentHighlightIndex].name)) {
-                    console.log("6");
                     currentHighlightIndex = (currentHighlightIndex + 1) % friends.length;
                 }
                 appState.lastSelectedFriendName = friends[currentHighlightIndex].name;
                 highlightSelected();
-                spinCount++;
-                if (spinCount >= maxSpins) {
+                if (friends[currentHighlightIndex] == selectedFriend)
+                    cycles--;
+                if (cycles === 0) {
                     clearInterval(intervalId);
                     intervalId = undefined;
                     appState.confirmationPending = true;
@@ -233,3 +293,4 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 });
+export {};

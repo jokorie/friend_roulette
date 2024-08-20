@@ -1,0 +1,14 @@
+Maybe consider having a `spindle` of names and a fixed picker. Kinda like those casino games. Wheel of fortune esque
+
+08/19/24
+- DONE: Plan to get rid of the weird reloading bug. It was just the continuous build tool
+- Plan to have weighted selection of names
+- DONE: allow for custom cadence  
+
+
+Next steps
+- look into connecting to phone or email, look into firebase
+- look to make this an api so you can automatically call it
+- grid of all your friends with health bars representing who you need to call
+- well say that the spindle can randomly select anyone but places extra emphasis on friends whos expiration date is close if not already passed
+- allow spindle on full grid of names

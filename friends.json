@@ -1,48 +1,38 @@
 {
   "friends": [
     {
-      "name": "johnny",
-      "lastContacted": "2024-08-18T16:08:35.087Z",
-      "cadence": 28
-    },
-    {
-      "name": "jacob",
-      "lastContacted": "2024-08-18T16:10:26.822Z",
-      "cadence": 7
-    },
-    {
-      "name": "jonas",
-      "lastContacted": "2024-08-18T16:08:10.657Z",
+      "name": "booyya",
+      "lastContacted": "2024-08-18T17:56:24.140Z",
       "cadence": 14
     },
     {
-      "name": "qy5egr",
-      "lastContacted": "2024-08-18T16:14:51.553Z",
-      "cadence": 14
-    },
-    {
-      "name": "HQREFD",
-      "lastContacted": "2024-08-18T16:10:49.050Z",
-      "cadence": 7
-    },
-    {
-      "name": "eqyhra",
-      "lastContacted": "2024-08-18T16:29:19.602Z",
-      "cadence": 7
-    },
-    {
-      "name": "a",
+      "name": "shonell",
       "lastContacted": null,
       "cadence": 7
     },
     {
-      "name": "gWRSDV",
-      "lastContacted": "2024-08-18T16:29:11.734Z",
-      "cadence": 28
+      "name": "jason lee",
+      "lastContacted": "2024-08-18T17:56:59.220Z",
+      "cadence": 7
+    },
+    {
+      "name": "Zac N",
+      "lastContacted": null,
+      "cadence": 14
+    },
+    {
+      "name": "joe",
+      "lastContacted": null,
+      "cadence": 7
+    },
+    {
+      "name": "ben yonas",
+      "lastContacted": null,
+      "cadence": 14
     }
   ],
   "appState": {
-    "confirmationPending": false,
-    "lastSelectedFriendName": ""
+    "lastSelectedFriendName": "",
+    "confirmationPending": false
   }
 }

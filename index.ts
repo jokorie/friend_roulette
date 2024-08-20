@@ -9,6 +9,7 @@ interface Friend {
     name: string;
     lastContacted: Date | null;
     cadence: number;
+    instantiationDate: Date;
 }
 
 interface AppState {
